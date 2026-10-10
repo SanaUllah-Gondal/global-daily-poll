@@ -3,49 +3,54 @@
 import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-// Random Poll Generator Data
-const pollTopics = [
-  {
-    text: "Should artificial intelligence be regulated by strict international laws?",
-    options: ["Yes, strictly", "Yes, with basic limits", "No, keep it open"]
-  },
-  {
-    text: "Will remote work completely replace traditional office spaces by 2030?",
-    options: ["Definitely Yes", "Partially (Hybrid)", "No, offices will stay"]
-  },
-  {
-    text: "Should social media accounts require government ID verification to stop bots?",
-    options: ["Yes, mandatory", "No, preserve anonymity", "Only for verified badges"]
-  },
-  {
-    text: "Is nuclear energy the most effective solution to combat global climate change?",
-    options: ["Yes, essential", "Maybe as secondary", "No, focus on solar/wind"]
-  },
-  {
-    text: "Should four-day workweeks become the global standard for all companies?",
-    options: ["Yes, full salary", "Yes, with adjusted pay", "No, five days is fine"]
-  },
-  {
-    text: "Will cryptocurrencies eventually replace paper currencies worldwide?",
-    options: ["Yes, inevitable", "They will coexist", "No, fiat currency is safer"]
-  },
-  {
-    text: "Should autonomous driverless vehicles be allowed on public highways without human supervision?",
-    options: ["Yes, fully safe", "Only in special lanes", "No, too risky"]
-  },
-  {
-    text: "Is space exploration worth the billions spent while earth faces major challenges?",
-    options: ["Yes, vital for humanity", "Reduce budget", "No, fix earth first"]
-  },
-  {
-    text: "Should universities replace traditional degrees with skill-based AI certificates?",
-    options: ["Yes, skills matter more", "Hybrid model is best", "No, degrees are essential"]
-  },
-  {
-    text: "Will human lifespan regularly exceed 120 years due to biotech advances in this century?",
-    options: ["Yes, highly likely", "Only for the rich", "Unlikely"]
-  }
+// Unlimited Dynamic Question Generator Engine
+const topics = [
+  { category: "Technology", subject: "Artificial Intelligence", action: "be granted legal rights or personhood" },
+  { category: "Workforce", subject: "Remote Work", action: "be recognized as a fundamental employee right" },
+  { category: "Cybersecurity", subject: "Social Media Platforms", action: "require mandatory real-name government ID verification" },
+  { category: "Energy", subject: "Nuclear Energy", action: "be rapidly expanded to fully replace fossil fuels" },
+  { category: "Economics", subject: "4-Day Workweeks", action: "become the legal standard for all corporate businesses" },
+  { category: "Finance", subject: "Cryptocurrencies", action: "completely replace traditional physical paper money" },
+  { category: "Automotive", subject: "Driverless Autonomous Cars", action: "be allowed on highways without human backup drivers" },
+  { category: "Space", subject: "Mars Colonization Projects", action: "receive public funding ahead of Earth environmental programs" },
+  { category: "Education", subject: "Skill-Based AI Certificates", action: "replace traditional 4-year university college degrees" },
+  { category: "Biotech", subject: "Human Gene Editing", action: "be permitted for genetic health enhancements" },
+  { category: "Society", subject: "Universal Basic Income (UBI)", action: "be guaranteed to all citizens regardless of income" },
+  { category: "Privacy", subject: "Cashless Society", action: "eliminate physical banknotes completely" },
+  { category: "Media", subject: "AI-Generated Media & Deepfakes", action: "carry legally enforced digital watermarks" },
+  { category: "Urban Planning", subject: "Smart Facial Recognition", action: "be installed in all major public transport systems" }
 ];
+
+const questionPrefixes = [
+  "In the near future, should",
+  "Do you agree that",
+  "Is it time that global laws mandate",
+  "Should world governments ensure that",
+  "Would humanity benefit if"
+];
+
+const optionSets = [
+  ["Yes, strongly agree", "Neutral / Dependent", "No, strongly disagree"],
+  ["Definitely Yes", "Only with strict limits", "No, absolutely not"],
+  ["It is necessary", "Too risky right now", "It should be banned"],
+  ["High priority", "Medium priority", "Low / No priority"]
+];
+
+function generateDynamicPoll() {
+  const selectedTopic = topics[Math.floor(Math.random() * topics.length)];
+  const selectedPrefix = questionPrefixes[Math.floor(Math.random() * questionPrefixes.length)];
+  const selectedOptions = optionSets[Math.floor(Math.random() * optionSets.length)];
+  
+  const pollId = `poll-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const fullText = `${selectedPrefix} ${selectedTopic.subject.toLowerCase()} ${selectedTopic.action}?`;
+
+  return {
+    id: pollId,
+    category: selectedTopic.category,
+    text: fullText,
+    options: selectedOptions
+  };
+}
 
 export default function Home() {
   const [question, setQuestion] = useState<any>(null);
@@ -59,38 +64,26 @@ export default function Home() {
   const [submittingComment, setSubmittingComment] = useState(false);
 
   useEffect(() => {
-    generateNewPoll();
+    loadNewPoll();
     if (!localStorage.getItem('voter_id')) {
       localStorage.setItem('voter_id', uuidv4());
     }
   }, []);
 
-  // Endless Dynamic Poll Generator
-  const generateNewPoll = () => {
+  const loadNewPoll = () => {
     setLoading(true);
     setHasVoted(false);
     setCommentSubmitted(false);
     setCommentText('');
 
-    // Pick a random poll template or create a dynamic combination
-    const randomIndex = Math.floor(Math.random() * pollTopics.length);
-    const selectedTopic = pollTopics[randomIndex];
-    
-    // Create unique dynamic Poll ID
-    const uniquePollId = `poll-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-    setQuestion({
-      id: uniquePollId,
-      text: selectedTopic.text,
-      options: selectedTopic.options
-    });
-
+    const newPoll = generateDynamicPoll();
+    setQuestion(newPoll);
     setLoading(false);
   };
 
   const handleNextPoll = () => {
     setPollCount((prev) => prev + 1);
-    generateNewPoll();
+    loadNewPoll();
   };
 
   const handleVote = async (optionIndex: number) => {
@@ -136,7 +129,7 @@ export default function Home() {
   if (loading || !question) {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="text-slate-500 font-medium">Generating dynamic poll...</div>
+        <div className="text-slate-500 font-medium">Generating new dynamic poll...</div>
       </main>
     );
   }
@@ -148,11 +141,11 @@ export default function Home() {
         {/* Header Bar */}
         <div className="flex justify-between items-center mb-6">
           <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
-            Live Poll #{pollCount}
+            {question.category} • Poll #{pollCount}
           </span>
           <button
             onClick={handleNextPoll}
-            className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-1"
+            className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-1"
           >
             <span>🔄 Next Poll</span>
           </button>
@@ -181,7 +174,7 @@ export default function Home() {
           <div className="text-center py-6 bg-green-50 border border-green-200 rounded-xl mb-4">
             <div className="text-3xl mb-1">🎉</div>
             <h2 className="text-xl font-bold text-green-700">Vote Registered!</h2>
-            <p className="text-slate-500 text-xs mt-1">Click "Next Poll" above to keep voting.</p>
+            <p className="text-slate-500 text-xs mt-1">Click "Next Poll" above to keep voting endless questions.</p>
           </div>
         )}
 
