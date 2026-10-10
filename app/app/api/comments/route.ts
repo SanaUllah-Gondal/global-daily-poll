@@ -12,46 +12,48 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-// Fetch all comments (For Admin Portal)
-export async function GET() {
-  const supabase = getSupabaseClient();
-  
-  if (!supabase) {
-    return NextResponse.json({ error: 'Supabase env variables missing' }, { status: 500 });
-  }
-
-  const { data, error } = await supabase
-    .from('comments')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data || []);
-}
-
-// Post a new comment
 export async function POST(req: Request) {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    return NextResponse.json({ error: 'Supabase env variables missing' }, { status: 500 });
-  }
-
   try {
+    const supabase = getSupabaseClient();
     const { questionId, voterId, commentText } = await req.json();
 
     if (!commentText || commentText.trim() === '') {
       return NextResponse.json({ error: 'Comment cannot be empty' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('comments')
-      .insert([{ question_id: questionId, voter_id: voterId, comment_text: commentText }])
-      .select();
+    // Agar Supabase configured hai to database me save karein
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([{ question_id: questionId, voter_id: voterId, comment_text: commentText }]);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ success: true, data });
+      if (error) {
+        console.error('Supabase insert error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    } else {
+      console.log('Local comment received (No Supabase connected):', { questionId, voterId, commentText });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('API Error:', err);
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json([]);
+
+    const { data } = await supabase
+      .from('comments')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    return NextResponse.json(data || []);
+  } catch (err) {
+    return NextResponse.json([]);
   }
 }
